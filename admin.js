@@ -16,24 +16,6 @@ let galleryFilter = 'all';
 function $(sel) { return document.querySelector(sel); }
 function $all(sel) { return Array.from(document.querySelectorAll(sel)); }
 
-(function initThemeToggle() {
-  const toggles = $all('.theme-toggle');
-  if (!toggles.length) return;
-  function syncState() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    toggles.forEach(function (t) { t.setAttribute('aria-pressed', isDark ? 'true' : 'false'); });
-  }
-  syncState();
-  toggles.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const nowDark = document.documentElement.getAttribute('data-theme') !== 'dark';
-      document.documentElement.setAttribute('data-theme', nowDark ? 'dark' : 'light');
-      try { localStorage.setItem('tibi-theme', nowDark ? 'dark' : 'light'); } catch (e) {}
-      syncState();
-    });
-  });
-})();
-
 function showToast(msg) {
   const t = $('#toast');
   t.textContent = msg;

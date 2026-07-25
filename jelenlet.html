@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jelenléti rendszer | Tibiredőny Kft</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="jelenlet.css">
+</head>
+<body class="admin-body">
+
+<!-- BEJELENTKEZÉS -->
+<div class="admin-login" id="loginScreen">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <span class="l1">Tibiredőny</span>
+    <span class="l2">Jelenléti rendszer</span>
+    <div class="form-row">
+      <label for="li-email">E-mail cím</label>
+      <input id="li-email" type="email" required autocomplete="username">
+    </div>
+    <div class="form-row">
+      <label for="li-pass">Jelszó</label>
+      <input id="li-pass" type="password" required autocomplete="current-password">
+    </div>
+    <button class="login-btn" type="submit" id="loginBtn">Bejelentkezés</button>
+    <div class="login-error" id="loginError"></div>
+  </form>
+</div>
+
+<!-- JÓVÁHAGYÁSRA VÁR (nincs employees/{uid} dokumentum) -->
+<div class="pending-screen" id="pendingScreen" style="display:none;">
+  <div class="pending-card">
+    <div class="l1">Fiókod még nincs jóváhagyva</div>
+    <p>Sikeresen beléptél, de az adminisztrátornak fel kell vennie a nevedet a rendszerbe,
+       mielőtt rögzíthetnéd a be- és kilépéseidet. Add meg neki az alábbi azonosítót:</p>
+    <div class="uid-box" id="pendingUid">–</div>
+    <button class="a-btn outline" id="pendingLogoutBtn">Kijelentkezés</button>
+  </div>
+</div>
+
+<!-- FŐ ALKALMAZÁS -->
+<div class="admin-shell" id="adminShell">
+  <aside class="admin-side" id="adminSide">
+    <div class="brand">
+      <div class="l1">Tibiredőny</div>
+      <div class="l2">Jelenléti rendszer</div>
+    </div>
+    <nav class="admin-nav">
+      <button class="nav-btn active" data-tab="own">Jelenlétem</button>
+      <button class="nav-btn admin-only" data-tab="team" style="display:none;">Csapat</button>
+      <button class="nav-btn admin-only" data-tab="employees" style="display:none;">Alkalmazottak</button>
+      <button class="nav-btn admin-only" data-tab="log" style="display:none;">Teljes napló</button>
+    </nav>
+    <button class="logout-btn" id="logoutBtn">Kijelentkezés</button>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="admin-burger" id="burgerBtn">☰</button>
+        <h1 id="topbarTitle">Jelenlétem</h1>
+      </div>
+      <div class="who" id="whoBox"></div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- SAJÁT JELENLÉT -->
+      <section id="tab-own">
+        <div class="status-hero is-out" id="statusHero">
+          <div class="sh-label">Jelenlegi állapot</div>
+          <div class="sh-state" id="shState">Betöltés…</div>
+          <div class="sh-meta" id="shMeta">–</div>
+          <button class="big-toggle" id="bigToggleBtn">Rögzítés</button>
+        </div>
+
+        <div class="nfc-panel">
+          <div class="nfc-icon">📶</div>
+          <div class="nfc-text">
+            <div class="t1">NFC beolvasás indítása</div>
+            <div class="t2">Támogatott Android + Chrome eszközön: nyomd meg, majd érintsd a telefont a matricához.
+              Ha a matrica közvetlen linket tartalmaz, a be-/kilépés automatikusan is rögzítésre kerül megnyitáskor.</div>
+          </div>
+          <button id="nfcScanBtn">NFC olvasás indítása</button>
+          <div class="nfc-support" id="nfcSupport"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Legutóbbi rögzítéseim</h2></div>
+          <div style="overflow-x:auto;">
+            <table class="hist-table">
+              <thead><tr><th>Típus</th><th>Időpont</th><th>Mód</th><th>Hely / matrica</th></tr></thead>
+              <tbody id="ownHistBody"><tr><td colspan="4" class="empty-state">Betöltés…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CSAPAT (admin) -->
+      <section id="tab-team" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><h2>Ki van bent most</h2></div>
+          <div class="team-grid" id="teamGrid"><div class="empty-state">Betöltés…</div></div>
+        </div>
+      </section>
+
+      <!-- ALKALMAZOTTAK (admin) -->
+      <section id="tab-employees" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Alkalmazott hozzáadása</h2>
+          </div>
+          <p style="font-size:.85rem;color:var(--steel);margin-top:-8px;margin-bottom:16px;">
+            Az illető fiókját előbb hozd létre a
+            <a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase konzolon</a>
+            (Authentication → Users → Add user), majd az ott megjelenő <b>UID</b>-t másold be alább.
+            Ha valaki már bejelentkezett, de nincs jóváhagyva, a saját "Jóváhagyásra vár" képernyőjén is látja az UID-jét.
+          </p>
+          <form id="addEmployeeForm" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="ae-uid">Firebase UID</label>
+              <input id="ae-uid" required placeholder="pl. xJ3k...">
+            </div>
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="ae-name">Név</label>
+              <input id="ae-name" required placeholder="Kovács Béla">
+            </div>
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="ae-role">Jogosultság</label>
+              <select id="ae-role">
+                <option value="dolgozo">Dolgozó</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button class="a-btn" type="submit">Hozzáadás</button>
+          </form>
+          <div class="form-msg" id="aeMsg"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Kezelt alkalmazottak</h2></div>
+          <div class="lead-list" id="employeesList"><div class="empty-state">Betöltés…</div></div>
+        </div>
+      </section>
+
+      <!-- TELJES NAPLÓ (admin) -->
+      <section id="tab-log" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Teljes jelenléti napló</h2>
+            <button class="a-btn outline" id="exportCsvBtn">Export CSV</button>
+          </div>
+          <div class="filter-row">
+            <div class="f-field">
+              <label for="logEmployeeFilter">Alkalmazott</label>
+              <select id="logEmployeeFilter"><option value="all">Mindenki</option></select>
+            </div>
+            <div class="f-field">
+              <label for="logFrom">Ettől</label>
+              <input type="date" id="logFrom">
+            </div>
+            <div class="f-field">
+              <label for="logTo">Eddig</label>
+              <input type="date" id="logTo">
+            </div>
+            <button class="a-btn outline" id="logFilterBtn">Szűrés</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="hist-table">
+              <thead><tr><th>Név</th><th>Típus</th><th>Időpont</th><th>Mód</th><th>Hely / matrica</th></tr></thead>
+              <tbody id="logBody"><tr><td colspan="5" class="empty-state">Betöltés…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- AUTOMATA MEGERŐSÍTŐ KÉPERNYŐ (NFC-matricáról nyitott linkhez) -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="co-icon" id="coIcon">✓</div>
+  <div class="co-title" id="coTitle">Belépés rögzítve</div>
+  <div class="co-sub" id="coSub">–</div>
+  <div class="co-tag" id="coTag"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="jelenlet.js"></script>
+</body>
+</html>

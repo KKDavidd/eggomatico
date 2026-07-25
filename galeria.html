@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rólam | Lőrincz Tibor | Tibiredőny Kft Veszprém</title>
-<meta name="description" content="Ismerje meg Lőrincz Tibor árnyékolástechnikai szakembert. 18 év szakmai tapasztalat, OKJ-s végzettség, becsületes árak és prémium minőség Veszprémben.">
+<title>Galéria | Referenciák | Tibiredőny Kft Veszprém</title>
+<meta name="description" content="Tekintse meg munkáinkat! Prémium redőnyök, szúnyoghálók, napellenzők és pergolák beépítési referenciái Veszprémben és környékén. Minőség és precizitás.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -21,8 +21,8 @@
         <div class="dropdown"><a href="redonyok">Redőnyök</a><a href="szunyoghalok">Szúnyoghálók</a><a href="pergola">Pergola</a><a href="carport">Carport</a><a href="arnyekolok">Belső Árnyékolók</a><a href="napellenzok">Napellenzők</a><a href="zsaluziak">Zsaluziák</a><a href="screenarnyekolo">Screen árnyékolók</a></div>
       </li>
       <li><a class="nav-link" href="szolgaltatasok">Szolgáltatásaink</a></li>
-      <li><a class="nav-link active" href="rolam">Rólam</a></li>
-      <li><a class="nav-link" href="galeria">Galéria</a></li>
+      <li><a class="nav-link" href="rolam">Rólam</a></li>
+      <li><a class="nav-link active" href="galeria">Galéria</a></li>
       <li><a class="nav-link" href="videok">Videók</a></li>
       <li><a class="nav-link" href="kapcsolat">Kapcsolat</a></li></ul></nav>
     <a class="header-cta" href="kapcsolat">Árajánlat kérése</a>
@@ -33,53 +33,35 @@
 <section class="hero" style="padding:60px 0 46px;">
   <div class="louvre-anim" aria-hidden="true"><span style="width:100%"></span><span style="width:97%"></span><span style="width:94%"></span><span style="width:91%"></span><span style="width:88%"></span><span style="width:85%"></span><span style="width:82%"></span><span style="width:79%"></span><span style="width:76%"></span><span style="width:73%"></span></div>
   <div class="container">
-    <div class="eyebrow">Rólam</div>
-    <h1>Lőrincz Tibor <span class='accent'>vagyok</span></h1>
-    <p class="lead">Ismerje meg a Tibiredőny Kft. mögött álló szakmai hátteret, értékeket és elhivatottságot.</p>
-    <div class="hero-strip">Több mint két évtizedes tapasztalat<span style='margin:0 12px;'>•</span>OKJ-s végzettség<span style='margin:0 12px;'>•</span>Becsületes árak</div>
+    <div class="eyebrow">Galéria</div>
+    <h1>Galéria — <span class='accent'>Munkáink</span></h1>
+    <p class="lead">Tekintse meg az általunk beépített prémium minőségű redőnyöket, szúnyoghálókat és modern árnyékolókat.</p>
+    <div class="hero-strip">Valódi referenciák<span style='margin:0 12px;'>•</span>Precíz kivitelezés<span style='margin:0 12px;'>•</span>Elégedett ügyfelek</div>
   </div>
 </section>
 <section>
   <div class="container">
-    <div class="about-hero">
-      <div class="portrait" aria-hidden="true"></div>
-      <div>
-        <p>Közel <strong>két évtizede</strong> foglalkozom árnyékolástechnikai rendszerek szerelésével, javításával és gyártásával. Pályafutásom során mindig is a precizitásra, a megbízhatóságra és az ügyfélközpontú hozzáállásra törekedtem.</p>
-        <p>Számomra az árnyékolás nem csupán munka, hanem szakma és hivatás. Rendelkezem a szükséges <strong>hivatalos OKJ-s szakképesítéssel</strong>, így garantálom, hogy minden munka a legmagasabb szakmai követelményeknek megfelelően, szakszerűen valósul meg.</p>
-
-        <div class="quote-block">„A legkisebb munka is MUNKA!”</div>
-
-        <p>Ezt a mottót szem előtt tartva nem teszünk különbséget megbízás és megbízás között. Legyen szó egyetlen szakadt gurtni cseréjéről egy panellakásban, vagy egy teljes családi ház komplex, motoros alumínium redőnyrendszerének kiépítéséről és automatizálásáról — <strong>ugyanazzal a maximális odafigyeléssel és szakértelemmel</strong> fogunk hozzá.</p>
-        <p>Nem hiszünk a rejtett költségekben és a félmegoldásokban. Pontos, korrekt árajánlatot adunk, és ha azt Ön megfelelőnek találja, a pontos méretvétel érdekében egy teljesen <strong>ingyenes helyszíni felmérést</strong> biztosítunk!</p>
-        <p>Köszönjük előre is megtisztelő érdeklődését és bizalmát!</p>
-        <div class="hero-actions" style="margin-top:10px;">
-          <a class="btn btn-primary" style="border-color:var(--red);" href="kapcsolat">Kérjen ajánlatot</a>
-        </div>
-      </div>
+    <div class="filter-bar">
+      <button class="active" data-filter="all">Összes kép</button>
+      <button data-filter="redonyok">Redőnyök</button>
+      <button data-filter="mesh">Szúnyoghálók</button>
+      <button data-filter="napellenzo">Külső árnyékolók</button>
+      <button data-filter="belso">Belső árnyékolók</button>
+      <button data-filter="pergola">Pergola</button>
+    </div>
+    <div class="gallery-grid" data-dynamic-gallery id="galleryGrid">
+      <p style="grid-column:1/-1;color:var(--steel);">Galéria betöltése…</p>
     </div>
   </div>
 </section>
 
-<section class="section-alt">
-  <div class="container">
-    <div class="grid grid-2" style="align-items:center;gap:50px;">
-      <div>
-        <div class="section-head" style="margin-bottom:14px;">
-          <div class="eyebrow">Egy kis humor</div>
-          <h2>Hogy néz ki egy redőnyszerelő?</h2>
-        </div>
-        <p>Pont úgy, mint bárki más! :)</p>
-      </div>
-      <div>
-        <div class="section-head" style="margin-bottom:14px;">
-          <div class="eyebrow">Garancia</div>
-          <h2>Amire számíthat</h2>
-        </div>
-        <p>Kiemelt figyelmet fordítok a tartósságra, ezért kizárólag prémium minőségű alapanyagokkal dolgozom, melyekre teljes körű garanciát vállalok.</p>
-      </div>
-    </div>
+<div class="lightbox">
+  <div class="lb-inner">
+    <button class="lb-close" aria-label="Bezárás">&times;</button>
+    <div class="lb-ph"></div>
+    <div class="lb-cap"></div>
   </div>
-</section>
+</div>
 
 <footer class="site-footer">
   <div class="container">
@@ -125,6 +107,43 @@
     </div>
   </div>
 </footer>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="script.js"></script>
+<script>
+  (function () {
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    var grid = document.getElementById('galleryGrid');
+
+    db.collection('gallery').orderBy('order', 'asc').get().then(function (snap) {
+      if (snap.empty) {
+        grid.innerHTML = '<p style="grid-column:1/-1;color:var(--steel);">Hamarosan új munkáinkat is megtekintheti itt.</p>';
+        return;
+      }
+      var html = '';
+      snap.forEach(function (doc) {
+        var g = doc.data();
+        var img = g.imageUrl || '';
+        var caption = g.caption || '';
+        var cat = g.category || '';
+        html += '<div class="gallery-item" data-cat="' + escapeHtml(cat) + '" data-caption="' + escapeHtml(caption) + '" data-img="' + escapeHtml(img) + '">' +
+          '<div class="ph" style="' + (img ? "background-image:url('" + img + "');background-size:cover;background-position:center;" : '') + '"></div>' +
+          '<div class="cap">' + escapeHtml(caption) + '</div>' +
+        '</div>';
+      });
+      grid.innerHTML = html;
+      window.initGalleryInteractions();
+    }).catch(function (err) {
+      console.error(err);
+      grid.innerHTML = '<p style="grid-column:1/-1;color:var(--steel);">A galéria jelenleg nem elérhető.</p>';
+    });
+  })();
+</script>
 </body>
 </html>

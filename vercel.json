@@ -2,11 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "admin.tibiredonyd.kkdavid.tech" }],
-      "destination": "/admin"
-    },
+    { "source": "/", "destination": "/jelenlet", "has": [{ "type": "host", "value": "jelenlet.tibiredonyd.kkdavid.tech" }] },
     { "source": "/", "destination": "/fooldal" }
   ]
 }

@@ -47,18 +47,6 @@ function initGalleryInteractions() {
 window.initGalleryInteractions = initGalleryInteractions;
 
 document.addEventListener('DOMContentLoaded', function () {
-  var toggle = document.getElementById('themeToggle');
-  if (toggle) {
-    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-    toggle.addEventListener('click', function () {
-      var nowDark = document.documentElement.getAttribute('data-theme') !== 'dark';
-      document.documentElement.setAttribute('data-theme', nowDark ? 'dark' : 'light');
-      toggle.setAttribute('aria-pressed', nowDark ? 'true' : 'false');
-      try { localStorage.setItem('tibi-theme', nowDark ? 'dark' : 'light'); } catch (e) {}
-    });
-  }
-
   var burger = document.querySelector('.burger');
   var header = document.querySelector('.site-header');
   if (burger && header) {

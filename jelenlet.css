@@ -1,0 +1,117 @@
+/* Jelenléti rendszer — a meglévő admin.css design-tokenjeire épül (var(--red), var(--ink), stb.) */
+
+.pending-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+}
+.pending-card{
+  max-width:420px;width:100%;background:var(--white);border-top:4px solid var(--red);
+  padding:38px 34px;box-shadow:var(--shadow);text-align:center;
+}
+.pending-card .l1{font-family:var(--f-display);text-transform:uppercase;font-weight:700;font-size:1.2rem;margin-bottom:10px;}
+.pending-card p{color:var(--steel);font-size:.92rem;line-height:1.55;margin-bottom:18px;}
+.pending-card .uid-box{
+  background:var(--paper);border:1px solid var(--line);padding:10px 12px;font-family:monospace;
+  font-size:.82rem;word-break:break-all;margin-bottom:20px;user-select:all;
+}
+
+/* --- Fő státusz kártya --- */
+.status-hero{
+  background:var(--white);border:1px solid var(--line);padding:34px 30px;text-align:center;
+  margin-bottom:22px;position:relative;overflow:hidden;
+}
+.status-hero.is-in{border-top:4px solid #245c24;}
+.status-hero.is-out{border-top:4px solid var(--red);}
+.status-hero .sh-label{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--steel);}
+.status-hero .sh-state{
+  font-family:var(--f-display);text-transform:uppercase;font-weight:700;letter-spacing:.02em;
+  font-size:clamp(2.1rem,6vw,3rem);margin:8px 0 4px;
+}
+.status-hero.is-in .sh-state{color:#245c24;}
+.status-hero.is-out .sh-state{color:var(--red);}
+.status-hero .sh-meta{font-size:.85rem;color:var(--steel);}
+.status-hero .sh-meta b{color:var(--ink);}
+
+.big-toggle{
+  width:100%;margin-top:22px;padding:18px;border:0;cursor:pointer;
+  font-family:var(--f-display);text-transform:uppercase;letter-spacing:.06em;font-size:1rem;
+  color:var(--white);
+}
+.status-hero.is-in .big-toggle{background:var(--red);}
+.status-hero.is-in .big-toggle:hover{background:var(--red-dark);}
+.status-hero.is-out .big-toggle{background:#245c24;}
+.status-hero.is-out .big-toggle:hover{background:#1a441a;}
+.big-toggle:disabled{opacity:.55;cursor:default;}
+
+/* --- NFC panel --- */
+.nfc-panel{
+  background:var(--ink);color:var(--white);padding:24px 26px;margin-bottom:22px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.nfc-panel .nfc-icon{
+  width:52px;height:52px;flex:none;border:2px solid var(--red);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+}
+.nfc-panel .nfc-text{flex:1;min-width:180px;}
+.nfc-panel .nfc-text .t1{font-family:var(--f-display);text-transform:uppercase;font-size:.88rem;letter-spacing:.04em;margin-bottom:3px;}
+.nfc-panel .nfc-text .t2{font-size:.8rem;color:#c7bfb1;}
+.nfc-panel button{
+  border:1px solid var(--red);background:transparent;color:var(--white);padding:10px 16px;
+  font-family:var(--f-display);text-transform:uppercase;font-size:.78rem;letter-spacing:.05em;cursor:pointer;white-space:nowrap;
+}
+.nfc-panel button:hover{background:var(--red);}
+.nfc-panel .nfc-support{font-size:.72rem;color:#8a8378;width:100%;margin-top:2px;}
+
+/* --- Confirmation overlay (auto NFC-URL flow) --- */
+.confirm-overlay{
+  position:fixed;inset:0;background:var(--ink);z-index:100;display:none;
+  align-items:center;justify-content:center;flex-direction:column;color:var(--white);text-align:center;padding:24px;
+}
+.confirm-overlay.show{display:flex;}
+.confirm-overlay .co-icon{
+  width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:3rem;margin-bottom:22px;border:4px solid var(--white);
+}
+.confirm-overlay.co-in .co-icon{border-color:#3fae3f;color:#3fae3f;}
+.confirm-overlay.co-out .co-icon{border-color:var(--red);color:#ff6a6a;}
+.confirm-overlay .co-title{font-family:var(--f-display);text-transform:uppercase;font-weight:700;font-size:clamp(1.6rem,6vw,2.4rem);margin-bottom:8px;}
+.confirm-overlay .co-sub{color:#c7bfb1;font-size:.95rem;}
+.confirm-overlay .co-tag{margin-top:16px;font-size:.75rem;color:#8a8378;font-family:monospace;}
+
+/* --- History table --- */
+.hist-table{width:100%;border-collapse:collapse;font-size:.86rem;}
+.hist-table th{
+  text-align:left;font-family:var(--f-display);text-transform:uppercase;font-size:.68rem;
+  letter-spacing:.06em;color:var(--steel);border-bottom:1px solid var(--line);padding:8px 10px;
+}
+.hist-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink-soft);}
+.hist-table tr:last-child td{border-bottom:0;}
+.hist-tag{display:inline-block;background:var(--paper-2);padding:1px 8px;font-size:.72rem;border-radius:20px;color:var(--steel);}
+.type-be{color:#245c24;font-weight:600;}
+.type-ki{color:var(--red);font-weight:600;}
+
+/* --- Team grid (admin) --- */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
+.team-card{background:var(--white);border:1px solid var(--line);padding:16px 18px;border-left:4px solid var(--line);}
+.team-card.is-in{border-left-color:#245c24;}
+.team-card.is-out{border-left-color:var(--red);}
+.team-card .tc-name{font-family:var(--f-display);text-transform:uppercase;font-size:.92rem;margin-bottom:4px;}
+.team-card .tc-role{font-size:.7rem;color:var(--steel);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.team-card .tc-state{font-size:.85rem;font-weight:600;}
+.team-card.is-in .tc-state{color:#245c24;}
+.team-card.is-out .tc-state{color:var(--red);}
+.team-card .tc-meta{font-size:.76rem;color:var(--steel);margin-top:4px;}
+
+.role-pill{
+  font-family:var(--f-display);text-transform:uppercase;font-size:.62rem;letter-spacing:.05em;
+  padding:2px 8px;border-radius:20px;background:var(--paper-2);color:var(--steel);
+}
+.role-pill.admin{background:#fbeaea;color:#b90101;}
+
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+.filter-row .f-field label{display:block;font-family:var(--f-display);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);margin-bottom:5px;}
+.filter-row .f-field select,.filter-row .f-field input{border:1px solid var(--line);padding:8px 10px;font-size:.85rem;background:var(--paper);}
+
+@media (max-width:600px){
+  .status-hero{padding:26px 18px;}
+  .nfc-panel{padding:18px;}
+}
