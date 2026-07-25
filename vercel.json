@@ -1,0 +1,12 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin.tibiredonyd.kkdavid.tech" }],
+      "destination": "/admin"
+    },
+    { "source": "/", "destination": "/fooldal" }
+  ]
+}
