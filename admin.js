@@ -8,8 +8,10 @@ const CATEGORY_LABELS = {
 
 let unsubLeads = null;
 let unsubGallery = null;
+let unsubUsers = null;
 let allLeads = [];
 let allGallery = [];
+let allUsers = [];
 let leadFilter = 'all';
 let galleryFilter = 'all';
 
@@ -66,17 +68,18 @@ auth.onAuthStateChanged(function (user) {
     $('#loginScreen').style.display = 'flex';
     if (unsubLeads) { unsubLeads(); unsubLeads = null; }
     if (unsubGallery) { unsubGallery(); unsubGallery = null; }
-    allLeads = []; allGallery = [];
+    if (unsubUsers) { unsubUsers(); unsubUsers = null; }
+    allLeads = []; allGallery = []; allUsers = [];
   }
 });
 
-const TAB_TITLES = { dashboard: 'Áttekintés', leads: 'Ajánlatkérések', gallery: 'Galéria' };
+const TAB_TITLES = { dashboard: 'Áttekintés', leads: 'Ajánlatkérések', gallery: 'Galéria', users: 'Felhasználók' };
 $all('.nav-btn').forEach(function (btn) {
   btn.addEventListener('click', function () {
     $all('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    ['dashboard', 'leads', 'gallery'].forEach(function (t) {
+    ['dashboard', 'leads', 'gallery', 'users'].forEach(function (t) {
       $('#tab-' + t).style.display = (t === tab) ? '' : 'none';
     });
     $('#topbarTitle').textContent = TAB_TITLES[tab];
@@ -90,6 +93,16 @@ $('#burgerBtn').addEventListener('click', function () {
 function startListeners() {
   if (unsubLeads) unsubLeads();
   if (unsubGallery) unsubGallery();
+  if (unsubUsers) unsubUsers();
+
+  unsubUsers = db.collection('employees').orderBy('name', 'asc')
+    .onSnapshot(function (snap) {
+      allUsers = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      renderUsers();
+    }, function (error) {
+      console.error(error);
+      $('#usersList').innerHTML = '<div class="empty-state">Hiba az adatok betöltésekor.</div>';
+    });
 
   unsubLeads = db.collection('leads').orderBy('createdAt', 'desc')
     .onSnapshot(function (snap) {
@@ -370,3 +383,81 @@ $('#galleryDeleteBtn').addEventListener('click', function () {
       showToast('Hiba történt a törlés közben.');
     });
 });
+
+/* ---------------- Felhasználók (jelenléti rendszer jogosultságai) ---------------- */
+
+$('#addUserForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const uid = $('#au-uid').value.trim();
+  const name = $('#au-name').value.trim();
+  const role = $('#au-role').value;
+  const msg = $('#auMsg');
+  msg.className = 'form-msg';
+  if (!uid || !name) return;
+
+  db.collection('employees').doc(uid).set({
+    name: name,
+    role: role,
+    active: true,
+    currentlyIn: false,
+    lastChangeAt: null,
+    lastTag: null,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).then(function () {
+    msg.textContent = 'Felhasználó mentve.';
+    msg.classList.add('ok');
+    $('#addUserForm').reset();
+  }).catch(function (err) {
+    console.error(err);
+    msg.textContent = 'Hiba történt a mentéskor.';
+    msg.classList.add('err');
+  });
+});
+
+function renderUsers() {
+  const box = $('#usersList');
+  if (!allUsers.length) {
+    box.innerHTML = '<div class="empty-state">Még nincs felvett felhasználó.</div>';
+    return;
+  }
+  box.innerHTML = allUsers.map(function (u) {
+    const inNow = !!u.currentlyIn;
+    return '<div class="lead-row" style="cursor:default;">' +
+      '<div class="lr-main">' +
+        '<div class="lr-top">' +
+          '<span class="lr-name">' + escapeHtml(u.name || 'Névtelen') + '</span>' +
+          '<span class="role-pill' + (u.role === 'admin' ? ' admin' : '') + '">' + (u.role === 'admin' ? 'Admin' : 'Dolgozó') + '</span>' +
+          (u.active === false ? '<span class="status-badge new">Inaktív</span>' : '') +
+          '<span class="lr-date">' + escapeHtml(u.id) + '</span>' +
+        '</div>' +
+        '<div class="lr-contact">' +
+          '<span class="user-status ' + (inNow ? 'in' : 'out') + '">' + (inNow ? '● Jelenleg bent' : '○ Nincs bent') + '</span>' +
+          (u.lastChangeAt ? '  ·  utolsó változás: ' + formatDate(u.lastChangeAt) : '') +
+        '</div>' +
+        '<div class="lr-actions">' +
+          '<button class="a-btn outline" data-act="toggleRole" data-id="' + u.id + '">Szerepkör váltása</button>' +
+          '<button class="a-btn ghost" data-act="toggleActive" data-id="' + u.id + '">' + (u.active === false ? 'Aktiválás' : 'Deaktiválás') + '</button>' +
+          '<button class="a-btn danger" data-act="remove" data-id="' + u.id + '">Törlés</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  box.querySelectorAll('button[data-act]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const id = btn.dataset.id;
+      const act = btn.dataset.act;
+      const u = allUsers.find(x => x.id === id);
+      if (!u) return;
+      if (act === 'toggleRole') {
+        db.collection('employees').doc(id).update({ role: u.role === 'admin' ? 'dolgozo' : 'admin' });
+      } else if (act === 'toggleActive') {
+        db.collection('employees').doc(id).update({ active: u.active === false });
+      } else if (act === 'remove') {
+        if (confirm('Biztosan törlöd ' + (u.name || 'ezt a felhasználót') + '? (a korábbi jelenléti naplóbejegyzései megmaradnak)')) {
+          db.collection('employees').doc(id).delete();
+        }
+      }
+    });
+  });
+}

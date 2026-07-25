@@ -39,6 +39,7 @@
       <button class="nav-btn active" data-tab="dashboard">Áttekintés</button>
       <button class="nav-btn" data-tab="leads">Ajánlatkérések <span class="count-pill" id="newLeadPill" style="display:none;">0</span></button>
       <button class="nav-btn" data-tab="gallery">Galéria</button>
+      <button class="nav-btn" data-tab="users">Felhasználók</button>
     </nav>
     <button class="logout-btn" id="logoutBtn">Kijelentkezés</button>
   </aside>
@@ -90,6 +91,43 @@
             <button class="active" data-cat="all">Összes</button>
           </div>
           <div class="gallery-admin-grid" id="galleryGrid"><div class="empty-state">Betöltés…</div></div>
+        </div>
+      </section>
+
+      <section id="tab-users" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><h2>Felhasználó hozzáadása</h2></div>
+          <p style="font-size:.85rem;color:var(--steel);margin-top:-8px;margin-bottom:16px;">
+            Előbb hozd létre a fiókját a
+            <a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase konzolon</a>
+            (Authentication → Users → Add user), majd az ott megjelenő <b>UID</b>-t másold ide.
+            Ezek a felhasználók a jelenléti rendszerbe (<code>jelenlet.tibi.tedomained.eu</code>)
+            és — admin szerepkörrel — ide, az admin felületre is beléphetnek.
+          </p>
+          <form id="addUserForm" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="au-uid">Firebase UID</label>
+              <input id="au-uid" required placeholder="pl. xJ3k...">
+            </div>
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="au-name">Név</label>
+              <input id="au-name" required placeholder="Kovács Béla">
+            </div>
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="au-role">Jogosultság</label>
+              <select id="au-role">
+                <option value="dolgozo">Dolgozó</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button class="a-btn" type="submit">Hozzáadás</button>
+          </form>
+          <div class="form-msg" id="auMsg"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Felhasználók</h2></div>
+          <div class="lead-list" id="usersList"><div class="empty-state">Betöltés…</div></div>
         </div>
       </section>
 

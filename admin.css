@@ -173,6 +173,15 @@ body.admin-body{
 }
 .toast.show{opacity:1;transform:translateY(0);}
 
+.role-pill{
+  font-family:var(--f-display);text-transform:uppercase;font-size:.62rem;letter-spacing:.05em;
+  padding:2px 8px;border-radius:20px;background:var(--paper-2);color:var(--steel);
+}
+.role-pill.admin{background:#fbeaea;color:#b90101;}
+.user-status{font-size:.78rem;font-weight:600;}
+.user-status.in{color:#245c24;}
+.user-status.out{color:var(--steel);}
+
 .loader{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:aspin .7s linear infinite;vertical-align:-3px;margin-right:6px;}
 .loader.dark{border:2px solid rgba(28,26,24,.25);border-top-color:var(--ink);}
 @keyframes aspin{to{transform:rotate(360deg);}}
