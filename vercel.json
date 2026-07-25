@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/jelenlet", "has": [{ "type": "host", "value": "jelenlet.tibi.tedomained.eu" }] },
-    { "source": "/", "destination": "/admin", "has": [{ "type": "host", "value": "admin.tibi.tedomained.eu" }] }
+    { "source": "/", "destination": "/admin", "has": [{ "type": "host", "value": "admin.tibi.tedomained.eu" }] },
     { "source": "/", "destination": "/fooldal" }
   ]
 }
