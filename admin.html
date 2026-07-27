@@ -159,8 +159,8 @@
           </div>
           <div style="overflow-x:auto;">
             <table class="hist-table" id="payrollTable">
-              <thead><tr><th>Név</th><th>Bérezés</th><th>Díj</th><th>Ledolgozott idő</th><th>Számított fizetés</th><th></th></tr></thead>
-              <tbody id="payrollBody"><tr><td colspan="6" class="empty-state">Válassz hónapot, majd kattints a Számítás gombra.</td></tr></tbody>
+              <thead><tr><th>Név</th><th>Bérezés</th><th>Díj</th><th>Ledolgozott idő</th><th>Kerekítve (fél órára)</th><th>Eltérés</th><th>Számított fizetés</th><th>Kerekítés</th></tr></thead>
+              <tbody id="payrollBody"><tr><td colspan="8" class="empty-state">Válassz hónapot, majd kattints a Számítás gombra.</td></tr></tbody>
             </table>
           </div>
           <div style="text-align:right;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;font-size:.95rem;" id="payrollTotal"></div>
@@ -169,6 +169,14 @@
             a mai napig eltelt időt tekinti eddig ledolgozottnak. Hiányzó vagy páratlan bejegyzéseket
             figyelmen kívül hagyja — ezekre a "⚠" jelzés hívja fel a figyelmet, ellenőrizd a
             "Felhasználók" fülön az érintett napokat.
+          </p>
+          <p style="font-size:.78rem;color:var(--steel);margin-top:8px;">
+            A fizetés a ledolgozott időt a legközelebbi fél órára kerekítve veszi figyelembe.
+            A kerekítésből adódó eltérést (percben, +/-) az adott felhasználó egyenlegén tartja
+            számon, hónapról hónapra átvíve. Amint az egyenleg elér egy teljes fél órát, az a
+            következő "Kerekítés véglegesítése" gombnyomással valódi fél órás levonásként vagy
+            hozzáadásként jelenik meg a fizetésben. A "Kerekítés" oszlop gombjával rögzítheted az
+            adott hónap kerekítését — utána az adott hónapra már nem alkalmazható újra.
           </p>
         </div>
       </section>

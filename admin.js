@@ -384,7 +384,6 @@ $('#galleryDeleteBtn').addEventListener('click', function () {
     });
 });
 
-/* ---------------- Felhasználók (jelenléti rendszer jogosultságai) ---------------- */
 
 $('#addUserForm').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -406,6 +405,7 @@ $('#addUserForm').addEventListener('submit', function (e) {
     lastTag: null,
     payType: payType,
     rate: rate,
+    roundCarryMin: 0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true }).then(function () {
     msg.textContent = 'Felhasználó mentve.';
@@ -425,6 +425,12 @@ function formatForint(n) {
 function payLabel(u) {
   if (u.payType === 'havidij') return 'Havi fix: ' + formatForint(u.rate) + '/hó';
   return 'Órabér: ' + formatForint(u.rate) + '/óra';
+}
+
+function formatCarryMin(min) {
+  const v = Math.round(Number(min) || 0);
+  if (v === 0) return '0 perc';
+  return (v > 0 ? '+' : '') + v + ' perc';
 }
 
 function renderUsers() {
@@ -447,10 +453,12 @@ function renderUsers() {
           '<span class="user-status ' + (inNow ? 'in' : 'out') + '">' + (inNow ? '● Jelenleg bent' : '○ Nincs bent') + '</span>' +
           (u.lastChangeAt ? '  ·  utolsó változás: ' + formatDate(u.lastChangeAt) : '') +
           '  ·  ' + escapeHtml(payLabel(u)) +
+          '  ·  kerekítési egyenleg: ' + formatCarryMin(u.roundCarryMin) +
         '</div>' +
         '<div class="lr-actions">' +
           '<button class="a-btn outline" data-act="editPay" data-id="' + u.id + '">Bérezés szerkesztése</button>' +
           '<button class="a-btn outline" data-act="toggleRole" data-id="' + u.id + '">Szerepkör váltása</button>' +
+          '<button class="a-btn ghost" data-act="resetCarry" data-id="' + u.id + '">Egyenleg nullázása</button>' +
           '<button class="a-btn ghost" data-act="toggleActive" data-id="' + u.id + '">' + (u.active === false ? 'Aktiválás' : 'Deaktiválás') + '</button>' +
           '<button class="a-btn danger" data-act="remove" data-id="' + u.id + '">Törlés</button>' +
         '</div>' +
@@ -468,6 +476,10 @@ function renderUsers() {
         db.collection('employees').doc(id).update({ role: u.role === 'admin' ? 'dolgozo' : 'admin' });
       } else if (act === 'toggleActive') {
         db.collection('employees').doc(id).update({ active: u.active === false });
+      } else if (act === 'resetCarry') {
+        if (confirm('Nullázod ' + (u.name || 'a felhasználó') + ' kerekítési egyenlegét?')) {
+          db.collection('employees').doc(id).update({ roundCarryMin: 0, roundCarrySettledMonth: firebase.firestore.FieldValue.delete() });
+        }
       } else if (act === 'remove') {
         if (confirm('Biztosan törlöd ' + (u.name || 'ezt a felhasználót') + '? (a korábbi jelenléti naplóbejegyzései megmaradnak)')) {
           db.collection('employees').doc(id).delete();
@@ -479,7 +491,6 @@ function renderUsers() {
   });
 }
 
-/* ---------------- Bérezés szerkesztése (modal) ---------------- */
 
 const payEditModal = $('#payEditModal');
 function openPayEditModal(u) {
@@ -512,7 +523,6 @@ $('#payEditForm').addEventListener('submit', function (e) {
     });
 });
 
-/* ---------------- Havi bérszámítás ---------------- */
 
 (function initPayrollMonth() {
   const now = new Date();
@@ -555,6 +565,10 @@ function computeWorkedMs(events, rangeStart, rangeEnd) {
   return { ms: totalMs, ongoing: ongoing, warning: hadOrphanKi || longSessionWarning };
 }
 
+function roundToHalfHour(min) {
+  return Math.round(min / 30) * 30;
+}
+
 function formatHoursMin(ms) {
   const totalMin = Math.round(ms / 60000);
   const h = Math.floor(totalMin / 60);
@@ -575,11 +589,11 @@ $('#payrollCalcBtn').addEventListener('click', function () {
   const body = $('#payrollBody');
   const activeUsers = allUsers.filter(u => u.active !== false);
   if (!activeUsers.length) {
-    body.innerHTML = '<tr><td colspan="6" class="empty-state">Nincs felvett felhasználó.</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">Nincs felvett felhasználó.</td></tr>';
     return;
   }
   status.textContent = 'Számítás folyamatban…';
-  body.innerHTML = '<tr><td colspan="6" class="empty-state"><span class="loader dark"></span>Betöltés…</td></tr>';
+  body.innerHTML = '<tr><td colspan="8" class="empty-state"><span class="loader dark"></span>Betöltés…</td></tr>';
 
   Promise.all(activeUsers.map(function (u) {
     return db.collection('attendance').where('uid', '==', u.id).orderBy('at', 'asc').get()
@@ -604,41 +618,78 @@ $('#payrollCalcBtn').addEventListener('click', function () {
 
 function renderPayroll(rows) {
   const body = $('#payrollBody');
+  const monthVal = $('#payrollMonth').value;
   let total = 0;
   body.innerHTML = rows.map(function (r) {
     const u = r.user;
-    const hours = r.ms / 3600000;
+    const rawMin = r.ms / 60000;
+    const carryIn = Number(u.roundCarryMin) || 0;
+    const combined = rawMin + carryIn;
+    const roundedMin = roundToHalfHour(combined);
+    const carryOut = combined - roundedMin;
+    const deltaMin = Math.round(roundedMin - rawMin);
+    const payableHours = roundedMin / 60;
+
     let pay;
     if (u.payType === 'havidij') {
       pay = Number(u.rate) || 0;
     } else {
-      pay = Math.round(hours * (Number(u.rate) || 0));
+      pay = Math.round(payableHours * (Number(u.rate) || 0));
     }
     total += pay;
+
     const warnIcon = r.warning
       ? '<span class="pay-warn" title="Páratlan be-/kilépés vagy szokatlanul hosszú műszak található a naplóban — érdemes ellenőrizni.">⚠</span>'
       : '';
     const ongoingNote = r.ongoing ? ' <span style="color:var(--steel);font-size:.75rem;">(most is bent van, a mai napig)</span>' : '';
+    const deltaLabel = (deltaMin > 0 ? '+' : '') + deltaMin + ' perc';
+    const alreadySettled = u.roundCarrySettledMonth === monthVal;
+    const settleBtn = alreadySettled
+      ? '<span style="font-size:.75rem;color:var(--steel);">✓ rögzítve</span>'
+      : '<button class="a-btn ghost" data-carry-id="' + u.id + '" data-carry-out="' + carryOut + '">Véglegesítés</button>';
+
     return '<tr>' +
-      '<td>' + escapeHtml(u.name || '–') + '</td>' +
+      '<td>' + escapeHtml(u.name || '–') + warnIcon + '</td>' +
       '<td>' + (u.payType === 'havidij' ? 'Havi fix' : 'Órabér') + '</td>' +
       '<td>' + formatForint(u.rate) + (u.payType === 'havidij' ? '/hó' : '/óra') + '</td>' +
       '<td>' + formatHoursMin(r.ms) + ongoingNote + '</td>' +
+      '<td>' + formatHoursMin(roundedMin * 60000) + '</td>' +
+      '<td>' + deltaLabel + '</td>' +
       '<td><b>' + formatForint(pay) + '</b></td>' +
-      '<td>' + warnIcon + '</td>' +
+      '<td>' + settleBtn + '</td>' +
       '</tr>';
   }).join('');
   $('#payrollTotal').textContent = 'Összesen: ' + formatForint(total);
+
+  body.querySelectorAll('button[data-carry-id]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const id = btn.dataset.carryId;
+      const carryOut = Number(btn.dataset.carryOut);
+      db.collection('employees').doc(id).update({
+        roundCarryMin: carryOut,
+        roundCarrySettledMonth: monthVal
+      }).then(function () {
+        showToast('Kerekítés véglegesítve.');
+      }).catch(function (err) {
+        console.error(err);
+        showToast('Hiba történt a véglegesítéskor.');
+      });
+    });
+  });
 }
 
 $('#payrollExportBtn').addEventListener('click', function () {
   if (!lastPayrollRows.length) { showToast('Előbb futtasd le a számítást.'); return; }
-  const header = 'Nev;Berezes tipusa;Dij;Ledolgozott ora;Szamitott fizetes\n';
+  const header = 'Nev;Berezes tipusa;Dij;Ledolgozott perc;Kerekitett perc;Elteres perc;Szamitott fizetes\n';
   const csvBody = lastPayrollRows.map(function (r) {
     const u = r.user;
-    const hours = (r.ms / 3600000).toFixed(2);
-    const pay = u.payType === 'havidij' ? (Number(u.rate) || 0) : Math.round((r.ms / 3600000) * (Number(u.rate) || 0));
-    return [u.name || '', u.payType === 'havidij' ? 'Havi fix' : 'Oraber', u.rate || 0, hours, pay].join(';');
+    const rawMin = r.ms / 60000;
+    const carryIn = Number(u.roundCarryMin) || 0;
+    const roundedMin = roundToHalfHour(rawMin + carryIn);
+    const deltaMin = Math.round(roundedMin - rawMin);
+    const payableHours = roundedMin / 60;
+    const pay = u.payType === 'havidij' ? (Number(u.rate) || 0) : Math.round(payableHours * (Number(u.rate) || 0));
+    return [u.name || '', u.payType === 'havidij' ? 'Havi fix' : 'Oraber', u.rate || 0, Math.round(rawMin), roundedMin, deltaMin, pay].join(';');
   }).join('\n');
   const blob = new Blob(['\uFEFF' + header + csvBody], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
