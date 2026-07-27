@@ -73,13 +73,13 @@ auth.onAuthStateChanged(function (user) {
   }
 });
 
-const TAB_TITLES = { dashboard: 'Áttekintés', leads: 'Ajánlatkérések', gallery: 'Galéria', users: 'Felhasználók' };
+const TAB_TITLES = { dashboard: 'Áttekintés', leads: 'Ajánlatkérések', gallery: 'Galéria', users: 'Felhasználók', payroll: 'Bérezés' };
 $all('.nav-btn').forEach(function (btn) {
   btn.addEventListener('click', function () {
     $all('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    ['dashboard', 'leads', 'gallery', 'users'].forEach(function (t) {
+    ['dashboard', 'leads', 'gallery', 'users', 'payroll'].forEach(function (t) {
       $('#tab-' + t).style.display = (t === tab) ? '' : 'none';
     });
     $('#topbarTitle').textContent = TAB_TITLES[tab];
@@ -391,6 +391,8 @@ $('#addUserForm').addEventListener('submit', function (e) {
   const uid = $('#au-uid').value.trim();
   const name = $('#au-name').value.trim();
   const role = $('#au-role').value;
+  const payType = $('#au-paytype').value;
+  const rate = Number($('#au-rate').value) || 0;
   const msg = $('#auMsg');
   msg.className = 'form-msg';
   if (!uid || !name) return;
@@ -402,6 +404,8 @@ $('#addUserForm').addEventListener('submit', function (e) {
     currentlyIn: false,
     lastChangeAt: null,
     lastTag: null,
+    payType: payType,
+    rate: rate,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true }).then(function () {
     msg.textContent = 'Felhasználó mentve.';
@@ -413,6 +417,15 @@ $('#addUserForm').addEventListener('submit', function (e) {
     msg.classList.add('err');
   });
 });
+
+function formatForint(n) {
+  return (Number(n) || 0).toLocaleString('hu-HU') + ' Ft';
+}
+
+function payLabel(u) {
+  if (u.payType === 'havidij') return 'Havi fix: ' + formatForint(u.rate) + '/hó';
+  return 'Órabér: ' + formatForint(u.rate) + '/óra';
+}
 
 function renderUsers() {
   const box = $('#usersList');
@@ -433,8 +446,10 @@ function renderUsers() {
         '<div class="lr-contact">' +
           '<span class="user-status ' + (inNow ? 'in' : 'out') + '">' + (inNow ? '● Jelenleg bent' : '○ Nincs bent') + '</span>' +
           (u.lastChangeAt ? '  ·  utolsó változás: ' + formatDate(u.lastChangeAt) : '') +
+          '  ·  ' + escapeHtml(payLabel(u)) +
         '</div>' +
         '<div class="lr-actions">' +
+          '<button class="a-btn outline" data-act="editPay" data-id="' + u.id + '">Bérezés szerkesztése</button>' +
           '<button class="a-btn outline" data-act="toggleRole" data-id="' + u.id + '">Szerepkör váltása</button>' +
           '<button class="a-btn ghost" data-act="toggleActive" data-id="' + u.id + '">' + (u.active === false ? 'Aktiválás' : 'Deaktiválás') + '</button>' +
           '<button class="a-btn danger" data-act="remove" data-id="' + u.id + '">Törlés</button>' +
@@ -457,7 +472,177 @@ function renderUsers() {
         if (confirm('Biztosan törlöd ' + (u.name || 'ezt a felhasználót') + '? (a korábbi jelenléti naplóbejegyzései megmaradnak)')) {
           db.collection('employees').doc(id).delete();
         }
+      } else if (act === 'editPay') {
+        openPayEditModal(u);
       }
     });
   });
 }
+
+/* ---------------- Bérezés szerkesztése (modal) ---------------- */
+
+const payEditModal = $('#payEditModal');
+function openPayEditModal(u) {
+  $('#pe-id').value = u.id;
+  $('#pe-name-label').textContent = u.name || 'Névtelen';
+  $('#pe-paytype').value = u.payType === 'havidij' ? 'havidij' : 'orabér';
+  $('#pe-rate').value = u.rate || 0;
+  $('#payEditMsg').className = 'form-msg';
+  payEditModal.classList.add('show');
+}
+function closePayEditModal() { payEditModal.classList.remove('show'); }
+$('#payEditModalClose').addEventListener('click', closePayEditModal);
+payEditModal.addEventListener('click', function (e) { if (e.target === payEditModal) closePayEditModal(); });
+
+$('#payEditForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const id = $('#pe-id').value;
+  const payType = $('#pe-paytype').value;
+  const rate = Number($('#pe-rate').value) || 0;
+  const msg = $('#payEditMsg');
+  db.collection('employees').doc(id).update({ payType: payType, rate: rate })
+    .then(function () {
+      showToast('Bérezés frissítve.');
+      closePayEditModal();
+    })
+    .catch(function (err) {
+      console.error(err);
+      msg.textContent = 'Hiba történt a mentéskor.';
+      msg.className = 'form-msg err';
+    });
+});
+
+/* ---------------- Havi bérszámítás ---------------- */
+
+(function initPayrollMonth() {
+  const now = new Date();
+  const val = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const input = $('#payrollMonth');
+  if (input) input.value = val;
+})();
+
+function overlapMs(aStart, aEnd, bStart, bEnd) {
+  const start = Math.max(aStart.getTime(), bStart.getTime());
+  const end = Math.min(aEnd.getTime(), bEnd.getTime());
+  return Math.max(0, end - start);
+}
+
+function computeWorkedMs(events, rangeStart, rangeEnd) {
+  let totalMs = 0;
+  let openStart = null;
+  let hadOrphanKi = false;
+  let longSessionWarning = false;
+  events.forEach(function (ev) {
+    if (ev.type === 'be') {
+      openStart = ev.at;
+    } else if (ev.type === 'ki') {
+      if (openStart) {
+        const dur = ev.at.getTime() - openStart.getTime();
+        if (dur > 16 * 3600 * 1000) longSessionWarning = true;
+        totalMs += overlapMs(openStart, ev.at, rangeStart, rangeEnd);
+        openStart = null;
+      } else {
+        hadOrphanKi = true;
+      }
+    }
+  });
+  let ongoing = false;
+  if (openStart) {
+    const now = new Date();
+    totalMs += overlapMs(openStart, now, rangeStart, rangeEnd);
+    ongoing = true;
+  }
+  return { ms: totalMs, ongoing: ongoing, warning: hadOrphanKi || longSessionWarning };
+}
+
+function formatHoursMin(ms) {
+  const totalMin = Math.round(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h + ' óra ' + String(m).padStart(2, '0') + ' perc';
+}
+
+let lastPayrollRows = [];
+
+$('#payrollCalcBtn').addEventListener('click', function () {
+  const monthVal = $('#payrollMonth').value;
+  if (!monthVal) { showToast('Válassz hónapot.'); return; }
+  const [y, m] = monthVal.split('-').map(Number);
+  const rangeStart = new Date(y, m - 1, 1, 0, 0, 0, 0);
+  const rangeEnd = new Date(y, m, 1, 0, 0, 0, 0);
+
+  const status = $('#payrollStatus');
+  const body = $('#payrollBody');
+  const activeUsers = allUsers.filter(u => u.active !== false);
+  if (!activeUsers.length) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-state">Nincs felvett felhasználó.</td></tr>';
+    return;
+  }
+  status.textContent = 'Számítás folyamatban…';
+  body.innerHTML = '<tr><td colspan="6" class="empty-state"><span class="loader dark"></span>Betöltés…</td></tr>';
+
+  Promise.all(activeUsers.map(function (u) {
+    return db.collection('attendance').where('uid', '==', u.id).orderBy('at', 'asc').get()
+      .then(function (snap) {
+        const events = snap.docs
+          .map(d => d.data())
+          .filter(d => d.at) // csak lezárt (szerver-időbélyeggel rendelkező) események
+          .map(d => ({ type: d.type, at: d.at.toDate() }));
+        const result = computeWorkedMs(events, rangeStart, rangeEnd);
+        return Object.assign({ user: u }, result);
+      })
+      .catch(function (err) {
+        console.error(err);
+        return { user: u, ms: 0, ongoing: false, warning: true, error: true };
+      });
+  })).then(function (rows) {
+    lastPayrollRows = rows;
+    renderPayroll(rows);
+    status.textContent = 'Kész — ' + monthVal;
+  });
+});
+
+function renderPayroll(rows) {
+  const body = $('#payrollBody');
+  let total = 0;
+  body.innerHTML = rows.map(function (r) {
+    const u = r.user;
+    const hours = r.ms / 3600000;
+    let pay;
+    if (u.payType === 'havidij') {
+      pay = Number(u.rate) || 0;
+    } else {
+      pay = Math.round(hours * (Number(u.rate) || 0));
+    }
+    total += pay;
+    const warnIcon = r.warning
+      ? '<span class="pay-warn" title="Páratlan be-/kilépés vagy szokatlanul hosszú műszak található a naplóban — érdemes ellenőrizni.">⚠</span>'
+      : '';
+    const ongoingNote = r.ongoing ? ' <span style="color:var(--steel);font-size:.75rem;">(most is bent van, a mai napig)</span>' : '';
+    return '<tr>' +
+      '<td>' + escapeHtml(u.name || '–') + '</td>' +
+      '<td>' + (u.payType === 'havidij' ? 'Havi fix' : 'Órabér') + '</td>' +
+      '<td>' + formatForint(u.rate) + (u.payType === 'havidij' ? '/hó' : '/óra') + '</td>' +
+      '<td>' + formatHoursMin(r.ms) + ongoingNote + '</td>' +
+      '<td><b>' + formatForint(pay) + '</b></td>' +
+      '<td>' + warnIcon + '</td>' +
+      '</tr>';
+  }).join('');
+  $('#payrollTotal').textContent = 'Összesen: ' + formatForint(total);
+}
+
+$('#payrollExportBtn').addEventListener('click', function () {
+  if (!lastPayrollRows.length) { showToast('Előbb futtasd le a számítást.'); return; }
+  const header = 'Nev;Berezes tipusa;Dij;Ledolgozott ora;Szamitott fizetes\n';
+  const csvBody = lastPayrollRows.map(function (r) {
+    const u = r.user;
+    const hours = (r.ms / 3600000).toFixed(2);
+    const pay = u.payType === 'havidij' ? (Number(u.rate) || 0) : Math.round((r.ms / 3600000) * (Number(u.rate) || 0));
+    return [u.name || '', u.payType === 'havidij' ? 'Havi fix' : 'Oraber', u.rate || 0, hours, pay].join(';');
+  }).join('\n');
+  const blob = new Blob(['\uFEFF' + header + csvBody], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'berezes-' + ($('#payrollMonth').value || 'ismeretlen') + '.csv';
+  a.click();
+});

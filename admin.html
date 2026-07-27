@@ -40,6 +40,7 @@
       <button class="nav-btn" data-tab="leads">Ajánlatkérések <span class="count-pill" id="newLeadPill" style="display:none;">0</span></button>
       <button class="nav-btn" data-tab="gallery">Galéria</button>
       <button class="nav-btn" data-tab="users">Felhasználók</button>
+      <button class="nav-btn" data-tab="payroll">Bérezés</button>
     </nav>
     <button class="logout-btn" id="logoutBtn">Kijelentkezés</button>
   </aside>
@@ -104,7 +105,7 @@
             Ezek a felhasználók a jelenléti rendszerbe (<code>jelenlet.tibi.tedomained.eu</code>)
             és — admin szerepkörrel — ide, az admin felületre is beléphetnek.
           </p>
-          <form id="addUserForm" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
+          <form id="addUserForm" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:12px;align-items:end;">
             <div class="a-form-row" style="margin-bottom:0;">
               <label for="au-uid">Firebase UID</label>
               <input id="au-uid" required placeholder="pl. xJ3k...">
@@ -120,6 +121,17 @@
                 <option value="admin">Admin</option>
               </select>
             </div>
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="au-paytype">Bérezés</label>
+              <select id="au-paytype">
+                <option value="orabér">Órabér</option>
+                <option value="havidij">Havi fix</option>
+              </select>
+            </div>
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="au-rate">Díj (Ft)</label>
+              <input id="au-rate" type="number" step="1" min="0" placeholder="pl. 3500">
+            </div>
             <button class="a-btn" type="submit">Hozzáadás</button>
           </form>
           <div class="form-msg" id="auMsg"></div>
@@ -128,6 +140,36 @@
         <div class="panel">
           <div class="panel-head"><h2>Felhasználók</h2></div>
           <div class="lead-list" id="usersList"><div class="empty-state">Betöltés…</div></div>
+        </div>
+      </section>
+
+      <section id="tab-payroll" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Havi bérszámítás</h2>
+            <button class="a-btn outline" id="payrollExportBtn">Export CSV</button>
+          </div>
+          <div class="filter-row" style="display:flex;gap:12px;align-items:end;margin-bottom:18px;flex-wrap:wrap;">
+            <div class="a-form-row" style="margin-bottom:0;">
+              <label for="payrollMonth">Hónap</label>
+              <input type="month" id="payrollMonth">
+            </div>
+            <button class="a-btn" id="payrollCalcBtn">Számítás</button>
+            <span id="payrollStatus" style="font-size:.82rem;color:var(--steel);"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="hist-table" id="payrollTable">
+              <thead><tr><th>Név</th><th>Bérezés</th><th>Díj</th><th>Ledolgozott idő</th><th>Számított fizetés</th><th></th></tr></thead>
+              <tbody id="payrollBody"><tr><td colspan="6" class="empty-state">Válassz hónapot, majd kattints a Számítás gombra.</td></tr></tbody>
+            </table>
+          </div>
+          <div style="text-align:right;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;font-size:.95rem;" id="payrollTotal"></div>
+          <p style="font-size:.78rem;color:var(--steel);margin-top:14px;">
+            A számítás a jelenléti napló be-/kilépés párjaiból dolgozik. Ha valaki éppen bent van,
+            a mai napig eltelt időt tekinti eddig ledolgozottnak. Hiányzó vagy páratlan bejegyzéseket
+            figyelmen kívül hagyja — ezekre a "⚠" jelzés hívja fel a figyelmet, ellenőrizd a
+            "Felhasználók" fülön az érintett napokat.
+          </p>
         </div>
       </section>
 
@@ -168,6 +210,35 @@
       <div class="modal-actions">
         <button type="button" class="a-btn danger" id="galleryDeleteBtn" style="display:none;">Kép törlése</button>
         <button type="submit" class="a-btn" id="gallerySaveBtn">Mentés</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="payEditModal">
+  <div class="modal-box">
+    <button class="modal-close" id="payEditModalClose">&times;</button>
+    <h3>Bérezés szerkesztése</h3>
+    <form id="payEditForm">
+      <input type="hidden" id="pe-id">
+      <div class="a-form-row">
+        <label id="pe-name-label"></label>
+      </div>
+      <div class="a-form-row">
+        <label for="pe-paytype">Bérezés típusa</label>
+        <select id="pe-paytype">
+          <option value="orabér">Órabér</option>
+          <option value="havidij">Havi fix</option>
+        </select>
+      </div>
+      <div class="a-form-row">
+        <label for="pe-rate">Díj (Ft)</label>
+        <input id="pe-rate" type="number" step="1" min="0" required>
+      </div>
+      <div class="form-msg" id="payEditMsg"></div>
+      <div class="modal-actions">
+        <span></span>
+        <button type="submit" class="a-btn">Mentés</button>
       </div>
     </form>
   </div>

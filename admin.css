@@ -182,6 +182,15 @@ body.admin-body{
 .user-status.in{color:#245c24;}
 .user-status.out{color:var(--steel);}
 
+.hist-table{width:100%;border-collapse:collapse;font-size:.86rem;}
+.hist-table th{
+  text-align:left;font-family:var(--f-display);text-transform:uppercase;font-size:.68rem;
+  letter-spacing:.06em;color:var(--steel);border-bottom:1px solid var(--line);padding:8px 10px;
+}
+.hist-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink-soft);}
+.hist-table tr:last-child td{border-bottom:0;}
+.pay-warn{color:var(--red);cursor:help;}
+
 .loader{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:aspin .7s linear infinite;vertical-align:-3px;margin-right:6px;}
 .loader.dark{border:2px solid rgba(28,26,24,.25);border-top-color:var(--ink);}
 @keyframes aspin{to{transform:rotate(360deg);}}
